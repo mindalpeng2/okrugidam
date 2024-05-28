@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { db } from "@/firebase";
 import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
-import { db } from '../app/firebase';
+
 import ChatMessage from './ChatMessage';
 
 const GameScreen = ({ user, setUser }) => {
@@ -24,26 +25,27 @@ const GameScreen = ({ user, setUser }) => {
     if (message.trim() === '') return;
 
     setLoading(true);
-    await addDoc(collection(db, 'messages'), {
+    const newMessage = {
       text: message,
-      uid: user.uid,
+      sender: 'user',
       createdAt: new Date()
-    });
-    setMessage(''); // 여기서 입력 필드를 초기화
+    };
+    await addDoc(collection(db, 'messages'), newMessage);
+    setMessage(''); // 입력 필드를 초기화
 
     // Simulate AI response
     setTimeout(async () => {
-      await addDoc(collection(db, 'messages'), {
+      const aiMessage = {
         text: "AI 응답",
-        uid: 'ai',
+        sender: 'ai',
         createdAt: new Date()
-      });
+      };
+      await addDoc(collection(db, 'messages'), aiMessage);
       setLoading(false);
     }, 1000);
   };
 
   const handleLogout = () => {
-    // 로그아웃 시 시작 화면으로 이동
     setUser(null);
   };
 

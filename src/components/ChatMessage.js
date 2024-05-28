@@ -3,9 +3,9 @@
 import React from 'react';
 
 const ChatMessage = ({ message }) => {
-  const { text, uid } = message;
+  const { text, sender } = message;
 
-  const messageClass = uid === 'ai' ? 'bg-gray-300 text-left' : 'bg-blue-100 text-right';
+  const messageClass = sender === 'ai' ? 'bg-gray-300 text-left' : 'bg-blue-100 text-right';
 
   return (
     <div className={`p-4 ${messageClass}`}>
