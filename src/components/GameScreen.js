@@ -6,8 +6,8 @@ import { db } from '@/firebase';
 import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { Chat } from './Chat';
 
-const GameScreen = () => { 
-  const { data: session } = useSession(); 
+const GameScreen = () => {
+  const { data: session } = useSession();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -51,20 +51,22 @@ const GameScreen = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col">
-      <header className="flex justify-between items-center p-4 bg-gray-800 text-white"> 
-        <div>Welcome, {session?.user?.name}!</div> 
-        <button onClick={handleLogout}>로그아웃</button> 
+    <div className="h-screen w-screen flex flex-col">
+      <header className="flex justify-between items-center p-4 bg-gray-800 text-white w-full">
+        <div>Welcome, {session?.user?.name}!</div>
+        <button onClick={handleLogout}>로그아웃</button>
       </header>
-      <div className="flex flex-1">
-        <div className="w-1/4 p-4">
-          <img src="/path/to/enemy-image.png" alt="Enemy" />
-        </div>
-        <div className="w-2/4 p-4 flex flex-col">
-          <Chat messages={messages} loading={loading} onSendMessage={handleSendMessage} />
-        </div>
-        <div className="w-1/4 p-4">
-          <img src="/path/to/character-image.png" alt="Character" />
+      <div className="flex flex-1 items-center justify-center w-full">
+        <div className="flex w-full h-full items-center justify-center">
+          <div className="w-1/4 p-4 h-full flex items-center justify-center">
+            <img src="/path/to/enemy-image.png" alt="Enemy" className="max-h-full" />
+          </div>
+          <div className="w-2/4 p-4 flex flex-col items-center h-full">
+            <Chat messages={messages} loading={loading} onSendMessage={handleSendMessage} />
+          </div>
+          <div className="w-1/4 p-4 h-full flex items-center justify-center">
+            <img src="/path/to/character-image.png" alt="Character" className="max-h-full" />
+          </div>
         </div>
       </div>
     </div>
