@@ -5,7 +5,7 @@ import { ChatBubble } from "./ChatMessage";
 
 export const Chat = ({ messages, loading, onSendMessage }) => {
   return (
-    <div className="flex flex-col rounded-lg px-2 sm:p-4 sm:border border-neutral-300 h-[80vh] w-full max-w-2xl mx-auto">
+    <div className="flex flex-col rounded-lg px-2 sm:p-4 sm:border border-neutral-300 h-[90vh] w-full max-w-2xl mx-auto"style={{ backgroundColor: '#E6D4BF' }}>
       <div className="flex-1 overflow-y-auto">
         {/* messages 의 내용을 ChatBubble 컴포넌트를 통해 출력 */}
         {messages.map((message, index) => (
@@ -16,12 +16,12 @@ export const Chat = ({ messages, loading, onSendMessage }) => {
 
         {/* loading 이 true 면 ChatLoader 를 표시 */}
         {loading && (
-          <div className="my-1 sm:my-1.5">
+          <div className="my-1 sm:my-">
             <ChatLoader />
           </div>
         )}
       </div>
-      <div className="mt-4 sm:mt-8 w-full">
+      <div className="mt-4 sm:mt-8 w-full ">
         {/* 채팅 입력창을 표시, 전송 액션을 실행하는 onSend 함수를 넘겨준다 */}
         <ChatInput onSendMessage={onSendMessage} />
       </div>
