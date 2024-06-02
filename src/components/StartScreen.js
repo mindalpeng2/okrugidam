@@ -33,21 +33,34 @@ const StartScreen = ({ setUser }) => {
   };
 
   return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">게임 제목</h1>
-        <p className="mb-8">게임 설명</p>
-        {status === 'unauthenticated' && (
-          <button
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-            onClick={handleLogin}
-          >
-            카카오톡 로그인
-          </button>
-        )}
-      </div>
+    <div className="relative h-screen w-screen" style={{ backgroundImage: 'url(/assets/LoginBG.png)', backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
+
+        <p className="mb-8" style={{
+          position: "absolute",
+          right: "19.20%",
+          top: "24.58%",
+          transform: "translate(-50%, -50%)",
+          width: "calc(363px / 1440 * 100%)", // 글자칸의 너비
+          height: "calc(186px / 1025 * 100%)" // 글자칸의 높이
+      
+        }}>세계관 설명창 여기에 설명을 쓸 예정입니다.</p>
+  <div className="text-center">     
+         <button 
+           className="px-4 py-2 rounded-lg"
+           onClick={handleLogin}
+           style={{
+             backgroundImage: "url('/assets/LoginBTT.png')",
+             backgroundSize: "cover",
+             backgroundPosition: "center",
+             width: "150px", // 버튼의 너비를 이미지에 맞게 설정
+             height: "50px", // 버튼의 높이를 이미지에 맞게 설정
+             border: "none",
+
+           }}></button>
+            </div> 
     </div>
   );
-};
-
-export default StartScreen;
+  };
+  
+  export default StartScreen;
+    
