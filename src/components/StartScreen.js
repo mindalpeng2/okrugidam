@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react'; 
 // 세션 상태가 'authenticated'로 변경되면 setUser를 호출하여 로그인한 유저의 정보를 설정합니다.
-
+import { useSession, signIn } from 'next-auth/react'; // next-auth 훅을 가져옵니다.
 import { auth, provider } from '@/firebase';
 import { signInWithPopup } from 'firebase/auth';
 
