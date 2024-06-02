@@ -17,7 +17,7 @@ const StartScreen = ({ setUser }) => {
   }, [session, status, setUser]);
 
   const handleLogin = async () => {
-    await signIn('kakao');
+    //await signIn('kakao');
     //NextAuth.js에서 제공하는 함수로, 카카오톡 로그인을 시작합니다.
     
     // Firebase 로그인 관련 코드는 주석 처리합니다.
