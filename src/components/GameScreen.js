@@ -1,4 +1,5 @@
 'use client';
+import Head from "next/head";
 
 import React, { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
