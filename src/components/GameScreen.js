@@ -91,7 +91,7 @@ const GameScreen = () => {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col">
+    <div className="h-screen w-screen flex flex-col" style={{ backgroundImage: 'url(/assets/BattleBG.png)', backgroundSize: 'cover' }}>
       <header className="flex justify-between items-center p-4 bg-gray-800 text-white w-full">
         <div>Welcome, {session?.user?.name}!</div>
         <button onClick={handleLogout}>로그아웃</button>
@@ -101,7 +101,7 @@ const GameScreen = () => {
           <div className="w-1/4 p-4 h-full flex items-center justify-center">
             <img src="/path/to/enemy-image.png" alt="Enemy" className="max-h-full" />
           </div>
-          <div className="w-2/4 p-4 flex flex-col items-center h-full">
+          <div className="w-2/5 p-0 flex flex-col items-center h-full">
             <Chat messages={messages} loading={loading} onSendMessage={handleSendMessage} />
           </div>
           <div className="w-1/4 p-4 h-full flex items-center justify-center">
