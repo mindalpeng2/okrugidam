@@ -1,10 +1,7 @@
 'use client';
 
-import React, { useEffect } from 'react'; 
-// 세션 상태가 'authenticated'로 변경되면 setUser를 호출하여 로그인한 유저의 정보를 설정합니다.
+import React, { useEffect } from 'react';
 import { useSession, signIn } from 'next-auth/react'; // next-auth 훅을 가져옵니다.
-import { auth, provider } from '@/firebase';
-import { signInWithPopup } from 'firebase/auth';
 
 const StartScreen = ({ setUser }) => {
   const { data: session, status } = useSession();
@@ -32,11 +29,12 @@ const StartScreen = ({ setUser }) => {
     setUser({ uid: 'guest' });
   };
 
- 
-  
   return (
     <div style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
-      <img src="/assets/LoginBG.gif" alt="배경 GIF" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+      <video autoPlay loop muted style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain'  }}>
+        <source src="/assets/LoginBG.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
       <div style={{ 
         position: 'absolute', 
         top: 'calc(50% + 10%)', // 화면의 세로 기준으로 중간보다 살짝 아래
