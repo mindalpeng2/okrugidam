@@ -11,6 +11,9 @@ const GameScreen = () => {
   const { data: session } = useSession();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
     const q = query(collection(db, 'messages'), orderBy('createdAt'));
@@ -34,16 +37,52 @@ const GameScreen = () => {
     };
     await addDoc(collection(db, 'messages'), newMessage);
 
-    // Simulate AI response
+    // 예전코드: Simulate AI response
+    // setTimeout(async () => {
+    //   const aiMessage = {
+    //     text: "AI 응답",
+    //     sender: 'ai',
+    //     senderName: 'AI',
+    //     createdAt: new Date()
+    //   };
+    //   await addDoc(collection(db, 'messages'), aiMessage);
+    //   setLoading(false);
+    // }, 1000);
+    //이후 교수님께서 전에 올려주셨던 코드를 참고하면서 해봤음. 
+
     setTimeout(async () => {
-      const aiMessage = {
-        text: "AI 응답",
-        sender: 'ai',
-        senderName: 'AI',
-        createdAt: new Date()
-      };
-      await addDoc(collection(db, 'messages'), aiMessage);
-      setLoading(false);
+      try {
+        // 사용자 메시지를 챗봇 쪽으로 전송
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message: newMessage })
+        });
+
+        // API 응답을 JSON 형태로 변환
+        const data = await response.json();
+
+        // API 응답 메시지를 Firestore에 추가
+        const aiMessage = {
+          text: data.text,
+          sender: 'ai',
+          senderName: 'AI',
+          createdAt: new Date()
+        };
+
+        await addDoc(collection(db, 'messages'), aiMessage);
+
+        // 메시지 목록 상태를 업데이트
+        setMessages(prevMessages => [...prevMessages, aiMessage]);
+
+      } catch (error) {
+        console.error('Error sending message to /api/chat:', error);
+      } finally {
+        // 로딩 상태를 해제
+        setLoading(false);
+      }
     }, 1000);
   };
 
