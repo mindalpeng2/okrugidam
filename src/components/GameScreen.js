@@ -58,7 +58,7 @@ const GameScreen = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ message: newMessage })
+          body: JSON.stringify({ message: messages })
         });
 
         // API 응답을 JSON 형태로 변환
