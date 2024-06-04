@@ -37,20 +37,11 @@ const GameScreen = () => {
     };
   
     await addDoc(collection(db, 'messages'), newMessage);
-
-    // 예전코드: Simulate AI response
-    // setTimeout(async () => {
-    //   const aiMessage = {
-    //     text: "AI 응답",
-    //     sender: 'ai',
-    //     senderName: 'AI',
-    //     createdAt: new Date()
-    //   };
-    //   await addDoc(collection(db, 'messages'), aiMessage);
-    //   setLoading(false);
-    // }, 1000);
-    //이후 교수님께서 전에 올려주셨던 코드를 참고하면서 해봤음. 
-
+  
+    // messages 배열을 업데이트 하고, 새 메시지를 추가
+    setMessages(prevMessages => [...prevMessages, newMessage]);
+  
+    // 새로운 메시지가 추가된 후에 API에 요청을 보냅니다.
     setTimeout(async () => {
       try {
         const response = await fetch('/api/chat', {
@@ -58,7 +49,7 @@ const GameScreen = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ message: messages })
+          body: JSON.stringify({ messages: [...messages, newMessage] }) // 배열로 변경
         });
   
         if (!response.ok) {
@@ -68,7 +59,7 @@ const GameScreen = () => {
         const data = await response.json();
   
         const aiMessage = {
-          text: data.text,
+          text: data.parts[0].text,
           sender: 'ai',
           senderName: 'AI',
           createdAt: new Date(),
