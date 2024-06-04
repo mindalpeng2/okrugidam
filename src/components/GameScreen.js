@@ -27,65 +27,56 @@ const GameScreen = () => {
 
   const handleSendMessage = async (messageContent) => {
     if (!messageContent || !messageContent.parts[0].text.trim()) return;
-
+  
     setLoading(true);
     const newMessage = {
       text: messageContent.parts[0].text,
       sender: session?.user?.name || 'unknown',
       senderName: session?.user?.name || 'unknown',
-      createdAt: new Date()
+      createdAt: new Date(),
     };
+  
     await addDoc(collection(db, 'messages'), newMessage);
-
-    // 예전코드: Simulate AI response
-    // setTimeout(async () => {
-    //   const aiMessage = {
-    //     text: "AI 응답",
-    //     sender: 'ai',
-    //     senderName: 'AI',
-    //     createdAt: new Date()
-    //   };
-    //   await addDoc(collection(db, 'messages'), aiMessage);
-    //   setLoading(false);
-    // }, 1000);
-    //이후 교수님께서 전에 올려주셨던 코드를 참고하면서 해봤음. 
-
+  
+    // messages 배열을 업데이트 하고, 새 메시지를 추가
+    setMessages(prevMessages => [...prevMessages, newMessage]);
+  
+    // 새로운 메시지가 추가된 후에 API에 요청을 보냅니다.
     setTimeout(async () => {
       try {
-        // 사용자 메시지를 챗봇 쪽으로 전송
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ message: newMessage })
+          body: JSON.stringify({ messages: [...messages, newMessage] }) // 배열로 변경
         });
-
-        // API 응답을 JSON 형태로 변환
+  
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+  
         const data = await response.json();
-
-        // API 응답 메시지를 Firestore에 추가
+  
         const aiMessage = {
-          text: data.text,
+          text: data.parts[0].text,
           sender: 'ai',
           senderName: 'AI',
-          createdAt: new Date()
+          createdAt: new Date(),
+          // 여기에 필요한 다른 속성들이 있다면 추가하세요.
         };
-
+  
         await addDoc(collection(db, 'messages'), aiMessage);
-
-        // 메시지 목록 상태를 업데이트
+  
         setMessages(prevMessages => [...prevMessages, aiMessage]);
-
+  
       } catch (error) {
         console.error('Error sending message to /api/chat:', error);
       } finally {
-        // 로딩 상태를 해제
         setLoading(false);
       }
     }, 1000);
   };
-
   const handleLogout = () => {
     signOut();
   };
