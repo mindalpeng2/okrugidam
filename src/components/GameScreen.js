@@ -51,7 +51,6 @@ const GameScreen = () => {
         parts: [{ text: newMessage.text }]
       }
     ];
-
     setTimeout(async () => {
       try {
         // 사용자 메시지를 챗봇 쪽으로 전송
@@ -61,6 +60,7 @@ const GameScreen = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ messages: formattedMessages })
+
         });
 
         // API 응답을 JSON 형태로 변환
@@ -68,7 +68,7 @@ const GameScreen = () => {
 
         // API 응답 메시지를 Firestore에 추가
         const aiMessage = {
-          text: data.parts[0].text,
+          text: data.text,
           sender: 'ai',
           senderName: 'AI',
           createdAt: new Date()
