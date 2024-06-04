@@ -59,7 +59,7 @@ const GameScreen = () => {
         const data = await response.json();
   
         const aiMessage = {
-          text: data.parts[0].text,
+          text: data.text,
           sender: 'ai',
           senderName: 'AI',
           createdAt: new Date(),
