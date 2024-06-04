@@ -1,18 +1,20 @@
 import NextAuth from 'next-auth';
-import Providers from 'next-auth/providers';
+import KakaoProvider from 'next-auth/providers/kakao';
 
-export default NextAuth({
+const handler = NextAuth({
   providers: [
-    Providers.Kakao({
+    KakaoProvider({
       clientId: process.env.KAKAO_CLIENT_ID,
       clientSecret: process.env.KAKAO_CLIENT_SECRET,
     }),
-    // 추가적인 로그인 제공자 설정이 필요하다면 여기에 추가하세요.
   ],
+  secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    async session(session, token) {
+    async session({ session, token }) {
       session.user.id = token.sub;
       return session;
     },
   },
 });
+
+export { handler as GET, handler as POST };
