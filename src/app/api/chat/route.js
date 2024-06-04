@@ -20,6 +20,8 @@ export async function POST(req) {
   const data = await req.json();
   console.dir([...data.messages], { depth: 3 });
 
+  
+
   const chat = model.startChat({
     // 컨텍스트 유지를 위해 이전 메시지를 포함해서 보냄
     history: [
