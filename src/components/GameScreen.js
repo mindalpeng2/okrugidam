@@ -49,7 +49,7 @@ const GameScreen = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ messages: [...messages, newMessage] }) // 배열로 변경
+          body: JSON.stringify({ message: messages })
         });
   
         if (!response.ok) {
