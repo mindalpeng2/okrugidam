@@ -1,7 +1,7 @@
 'use client';
 import Head from "next/head";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { db } from '@/firebase';
 import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
@@ -11,6 +11,8 @@ const GameScreen = () => {
   const { data: session } = useSession();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -20,6 +22,7 @@ const GameScreen = () => {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setMessages(messages);
+      scrollToBottom();
     });
 
     return () => unsubscribe();
@@ -94,6 +97,7 @@ const GameScreen = () => {
           </div>
           <div className="w-2/5 p-0 flex flex-col items-center h-full">
             <Chat messages={messages} loading={loading} onSendMessage={handleSendMessage} />
+            <div ref={messagesEndRef} />
           </div>
           <div className="w-1/4 p-4 h-full flex items-center justify-center">
             <img src="/path/to/character-image.png" alt="Character" className="max-h-full" />
