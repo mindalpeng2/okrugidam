@@ -1,6 +1,5 @@
 'use client';
 import Head from "next/head";
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { db } from '@/firebase';
@@ -40,9 +39,6 @@ const GameScreen = () => {
     };
   
     await addDoc(collection(db, 'messages'), newMessage);
-    
-    // Remove this line to avoid adding message twice
-    // setMessages(prevMessages => [...prevMessages, newMessage]);
   
     // 새로운 메시지가 추가된 후에 API에 요청을 보냅니다.
     setTimeout(async () => {
@@ -81,7 +77,16 @@ const GameScreen = () => {
   
         await addDoc(collection(db, 'messages'), aiMessage);
   
-        setMessages(prevMessages => [...prevMessages, aiMessage]);
+        // 중복 추가 방지를 위해 이 부분을 수정
+        setMessages(prevMessages => {
+          const newMessages = [...prevMessages, aiMessage];
+          const seen = new Set();
+          return newMessages.filter(msg => {
+            const duplicate = seen.has(msg.text);
+            seen.add(msg.text);
+            return !duplicate;
+          });
+        });
   
       } catch (error) {
         console.error('Error sending message to /api/chat:', error);
@@ -90,8 +95,7 @@ const GameScreen = () => {
       }
     }, 1000);
   };
-  
-  
+
   const handleLogout = () => {
     signOut();
   };
