@@ -29,46 +29,44 @@ const GameScreen = () => {
   }, []);
 
   const handleSendMessage = async (messageContent) => {
-    if (!messageContent || !messageContent.parts || !messageContent.parts[0] || !messageContent.parts[0].text.trim()) return;
+    if (!messageContent || !messageContent.parts[0].text.trim()) return;
   
     setLoading(true);
     const newMessage = {
-      parts: [{ text: messageContent.parts[0].text }],
-      role: 'user',
+      text: messageContent.parts[0].text,
+      sender: session?.user?.name || 'unknown',
       senderName: session?.user?.name || 'unknown',
-      createdAt: new Date()
+      createdAt: new Date(),
     };
+  
     await addDoc(collection(db, 'messages'), newMessage);
   
+    // messages 배열을 업데이트 하고, 새 메시지를 추가
+    setMessages(prevMessages => [...prevMessages, newMessage]);
+  
+    // 새로운 메시지가 추가된 후에 API에 요청을 보냅니다.
     setTimeout(async () => {
       try {
-        console.log('Sending message to /api/chat:', newMessage);
-        const formattedMessages = messages.map(msg => ({
-          role: msg.role,
-          content: msg.parts.map(part => part.text).join(" ")
-        }));
-
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ messages: formattedMessages })
+          body: JSON.stringify({ message: messages })
         });
   
-        console.log('Response status:', response.status);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
   
         const data = await response.json();
-        console.log('Response from /api/chat:', data);
   
         const aiMessage = {
-          parts: [{ text: data.text }],
-          role: 'ai',
+          text: data.parts[0].text,
+          sender: 'ai',
           senderName: 'AI',
-          createdAt: new Date()
+          createdAt: new Date(),
+          // 여기에 필요한 다른 속성들이 있다면 추가하세요.
         };
   
         await addDoc(collection(db, 'messages'), aiMessage);
@@ -82,7 +80,6 @@ const GameScreen = () => {
       }
     }, 1000);
   };
-  
   const handleLogout = () => {
     signOut();
   };
@@ -112,4 +109,3 @@ const GameScreen = () => {
 };
 
 export default GameScreen;
-

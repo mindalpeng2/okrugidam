@@ -17,7 +17,7 @@ export const ChatInput = ({ onSendMessage }) => {
       return;
     }
 
-    onSendMessage({ text: content, sender: "user" });
+    onSendMessage({ role: "user", parts: [{ text: content }] });
     setContent("");
   };
 
