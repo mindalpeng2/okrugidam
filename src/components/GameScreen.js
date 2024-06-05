@@ -40,9 +40,9 @@ const GameScreen = () => {
     };
   
     await addDoc(collection(db, 'messages'), newMessage);
-  
-    // messages 배열을 업데이트 하고, 새 메시지를 추가
-    setMessages(prevMessages => [...prevMessages, newMessage]);
+    
+    // Remove this line to avoid adding message twice
+    // setMessages(prevMessages => [...prevMessages, newMessage]);
   
     // 새로운 메시지가 추가된 후에 API에 요청을 보냅니다.
     setTimeout(async () => {
@@ -57,7 +57,7 @@ const GameScreen = () => {
             parts: [{ text: newMessage.text }]
           }
         ];
-
+  
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: {
@@ -77,7 +77,6 @@ const GameScreen = () => {
           sender: 'ai',
           senderName: 'AI',
           createdAt: new Date(),
-          // 여기에 필요한 다른 속성들이 있다면 추가하세요.
         };
   
         await addDoc(collection(db, 'messages'), aiMessage);
@@ -91,6 +90,7 @@ const GameScreen = () => {
       }
     }, 1000);
   };
+  
   
   const handleLogout = () => {
     signOut();

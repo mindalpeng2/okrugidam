@@ -18,39 +18,19 @@ export async function POST(req) {
 
   // POST 로 전송받은 내용 중 messages 를 추출
   const data = await req.json();
-  console.dir([...data.messages], { depth: 3 });
+  const messages = data.messages;
 
+  const chatHistory = messages.map(msg => ({
+    role: msg.role,
+    parts: msg.parts.map(part => ({ text: part.text })),
+  }));
 
+  // chatHistory 내용을 확인하기 위한 console.log 추가
+  console.log('Chat History:', JSON.stringify(chatHistory, null, 2));
 
   const chat = model.startChat({
     // 컨텍스트 유지를 위해 이전 메시지를 포함해서 보냄
-    history: [
-        // {
-        //   role: "user",
-        //   parts: [
-        //     {text: "게임 시작"},
-        //   ],
-        // },
-        // {
-        //   role: "model",
-        //   parts: [
-        //     {text: "## 용사여, 모험의 세계에 온 것을 환영합니다!\n\n**당신 앞에는 구미호가 나타났습니다!**\n\n**구미호**는 아홉 개의 꼬리를 가진 요괴로, 섬뜩한 아름다움을 자랑하며 인간을 유혹합니다. \n\n**구미호의 능력치:**\n\n* 체력: 100\n* 공격력: 10\n* 방어력: 10\n\n**당신의 용사들은 다음과 같은 능력치를 가지고 있습니다.**\n\n* 청룡: 체력 100, 공격력 10, 방어력 10\n* 백호: 체력 100, 공격력 10, 방어력 10\n* 주작: 체력 100, 공격력 10, 방어력 10\n* 현무: 체력 100, 공격력 10, 방어력 10\n\n**첫 공격은 청룡부터 시작합니다. 청룡에게 어떤 명령을 내리시겠습니까?** \n"},
-        //   ],
-        // },
-        // {
-        //   role: "user",
-        //   parts: [
-        //     {text: "공격"},
-        //   ],
-        // },
-        // {
-        //   role: "model",
-        //   parts: [
-        //     {text: "청룡이 번개를 휘둘러 구미호에게 공격을 가합니다!\n\n**구미호는 15의 데미지를 입었습니다!**\n\n**구미호의 남은 체력: 85**\n\n이제 백호의 차례입니다. 백호에게 어떤 명령을 내리시겠습니까?\n"},
-        //   ],
-        // },
-      ],
-      
+    history: chatHistory,
     generationConfig: {
       // temperature 값이 높을 수록 AI 의 답변이 다양해짐
       temperature: 1,
@@ -61,13 +41,13 @@ export async function POST(req) {
 
   const result = await chat.sendMessage("");
   const response = await result.response;
-  const text = response.text();
-  console.log(response.candidates[0].content);
-  //   console.log(response.candidates[0].safetyRatings);
+  const text = await response.text(); // await를 추가하여 Promise 해결
 
-  return Response.json({
+  return new Response(JSON.stringify({
     // AI 의 답변은 model 역할로 전송
     role: "model",
     parts: [{ text: text }],
+  }), {
+    headers: { 'Content-Type': 'application/json' }
   });
 }
