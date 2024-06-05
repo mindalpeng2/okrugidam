@@ -41,3 +41,5 @@ export const Chat = ({ messages, loading, onSendMessage }) => {
     </div>
   );
 };
+
+export default Chat;

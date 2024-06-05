@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { db } from '@/firebase';
 import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
-import { Chat } from './Chat';
+import Chat from './Chat'; // 기본 내보내기로 가져오기
 
 const GameScreen = () => {
   const { data: session } = useSession();
@@ -47,12 +47,23 @@ const GameScreen = () => {
     // 새로운 메시지가 추가된 후에 API에 요청을 보냅니다.
     setTimeout(async () => {
       try {
+        const formattedMessages = [
+          ...messages.map(msg => ({
+            role: msg.sender === 'ai' ? 'model' : 'user',
+            parts: [{ text: msg.text }]
+          })),
+          {
+            role: 'user',
+            parts: [{ text: newMessage.text }]
+          }
+        ];
+
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ message: messages })
+          body: JSON.stringify({ messages: formattedMessages })
         });
   
         if (!response.ok) {
@@ -80,6 +91,7 @@ const GameScreen = () => {
       }
     }, 1000);
   };
+  
   const handleLogout = () => {
     signOut();
   };
