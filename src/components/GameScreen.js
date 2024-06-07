@@ -10,6 +10,8 @@ const GameScreen = () => {
   const { data: session } = useSession();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [monsterImage, setMonsterImage] = useState(null);
+  const [characterImage, setCharacterImage] = useState(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -26,6 +28,49 @@ const GameScreen = () => {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.sender === 'ai') {
+        // 몬스터 일러스트 경로 설정
+        if (lastMessage.text.includes('구미호')) {
+          setMonsterImage('/monsters/gumiho.png');
+        } else if (lastMessage.text.includes('장산범')) {
+          setMonsterImage('/monsters/jangsanbeom.png');
+        } else if (lastMessage.text.includes('처녀귀신')) {
+          setMonsterImage('/monsters/maiden.png');
+        } else if (lastMessage.text.includes('독각귀')) {
+          setMonsterImage('/monsters/dokgak.png');
+        } else if (lastMessage.text.includes('산신')) {
+          setMonsterImage('/monsters/mountgod.png');
+        } else if (lastMessage.text.includes('물귀신')) {
+          setMonsterImage('/monsters/water.png');
+        } else if (lastMessage.text.includes('도깨비')) {
+          setMonsterImage('/monsters/dokkaebi.png');
+        } else if (lastMessage.text.includes('인면조')) {
+          setMonsterImage('/monsters/ykdragon.png');
+        }
+        
+        if (lastMessage.text.includes('물리쳤습니다')) {
+          setMonsterImage(null);
+        }
+        // 추가적인 몬스터 조건 처리
+      } else if (lastMessage.sender !== 'ai') {
+        // 캐릭터 일러스트 경로 설정
+        if (lastMessage.text.includes('청룡')) {
+          setCharacterImage('/characters/cheongryong.png');
+        } else if (lastMessage.text.includes('백호')) {
+          setCharacterImage('/characters/baekho.png');
+        } else if (lastMessage.text.includes('주작')) {
+          setCharacterImage('/characters/jujak.png');
+        } else if (lastMessage.text.includes('현무')) {
+          setCharacterImage('/characters/hyunmu.png');
+        }
+        // 추가적인 캐릭터 조건 처리
+      }
+    }
+  }, [messages]);
 
   const handleSendMessage = async (messageContent) => {
     if (!messageContent || !messageContent.parts[0].text.trim()) return;
@@ -109,15 +154,13 @@ const GameScreen = () => {
       <div className="flex flex-1 items-center justify-center w-full">
         <div className="flex w-full h-full items-center justify-center">
           <div className="w-1/4 p-4 h-full flex items-center justify-center">
-            <img src="/path/to/enemy-image.png" alt="Enemy" className="max-h-full" />
-          </div>
+            {monsterImage && <img src={monsterImage} alt="Monster" className="max-h-full" />}          </div>
           <div className="w-2/5 p-0 flex flex-col items-center h-full">
             <Chat messages={messages} loading={loading} onSendMessage={handleSendMessage} />
             <div ref={messagesEndRef} />
           </div>
           <div className="w-1/4 p-4 h-full flex items-center justify-center">
-            <img src="/path/to/character-image.png" alt="Character" className="max-h-full" />
-          </div>
+            {characterImage && <img src={characterImage} alt="Character" className="max-h-full" />}          </div>
         </div>
       </div>
     </div>
