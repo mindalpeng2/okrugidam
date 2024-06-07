@@ -2,7 +2,7 @@
 import Head from "next/head";
 import React, { useState, useEffect, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
-import { db } from '@/firebase';
+import { db, saveGameData } from '@/firebase';
 import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
 import Chat from './Chat'; // 기본 내보내기로 가져오기
 
@@ -19,6 +19,9 @@ const GameScreen = () => {
   };
 
   useEffect(() => {
+    // Save game data when the component mounts
+    saveGameData(); // 호출 위치 변경
+
     const q = query(collection(db, 'messages'), orderBy('createdAt'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
