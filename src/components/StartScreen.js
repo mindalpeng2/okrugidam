@@ -31,10 +31,11 @@ const StartScreen = ({ setUser }) => {
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
-      <video autoPlay loop muted style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain'  }}>
-        <source src="/assets/LoginBG.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
+      <img 
+        src="/assets/LoginBG.gif" 
+        alt="Background"
+        style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+      />
       <div style={{ 
         position: 'absolute', 
         top: 'calc(50% + 10%)', // 화면의 세로 기준으로 중간보다 살짝 아래
@@ -64,3 +65,4 @@ const StartScreen = ({ setUser }) => {
 };
 
 export default StartScreen;
+
