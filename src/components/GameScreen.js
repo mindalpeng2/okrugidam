@@ -148,22 +148,45 @@ const GameScreen = () => {
     signOut();
   };
 
+
   return (
     <div className="h-screen w-screen flex flex-col" style={{ backgroundImage: 'url(/assets/BattleBG.png)', backgroundSize: 'cover' }}>
-      <header className="flex justify-between items-center p-4 bg-gray-800 text-white w-full">
-        <div>Welcome, {session?.user?.name}!</div>
-        <button onClick={handleLogout}>로그아웃</button>
+      <header className="flex justify-between items-center p-4 w-full" style={{ backgroundColor: 'rgba(0, 0, 0, 0)' }}>
+        <div style={{ 
+          color: 'white', 
+          textShadow: '1px 1px 0 #0f0f41, -1px -1px 0 #0f0f41, -1px 1px 0 #0f0f41, 1px -1px 0 #0f0f41',
+          fontWeight: 'bold' 
+        }}>
+          {session?.user?.name} 공 어서 오시게나!
+        </div>
+        <button 
+          onClick={handleLogout}
+          style={{
+            pointerEvents: 'all',
+            backgroundImage: "url('/assets/LogoutBTT.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            width: '80px',
+            height: '40px',
+            border: "none",
+            transition: 'transform 0.1s ease, box-shadow 0.1s ease',
+            borderRadius: '7px'
+          }}
+          onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
+          onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+        ></button>
       </header>
-      <div className="flex flex-1 items-center justify-center w-full">
-        <div className="flex w-full h-full items-center justify-center">
-          <div className="w-1/4 p-4 h-full flex items-center justify-center">
-            {monsterImage && <img src={monsterImage} alt="Monster" className="max-h-full" />}          </div>
-          <div className="w-2/5 p-0 flex flex-col items-center h-full">
-            <Chat messages={messages} loading={loading} onSendMessage={handleSendMessage} />
-            <div ref={messagesEndRef} />
-          </div>
-          <div className="w-1/4 p-4 h-full flex items-center justify-center">
-            {characterImage && <img src={characterImage} alt="Character" className="max-h-full" />}          </div>
+      <div className="flex flex-1 items-center justify-center w-full relative">
+        <img src="/assets/Jockjaaa.png" alt="족자 이미지" className="w-2/5 p-0 flex flex-col items-center" style={{ position: 'absolute', top: '-10px', transform: 'scale(1.2)' }} />
+        <div className="w-1/4 p-4 h-full flex items-center justify-center">
+          {monsterImage && <img src={monsterImage} alt="Monster" className="max-h-full" />}
+        </div>
+        <div className="w-2/5 p-0 flex flex-col items-center h-full">
+          <Chat messages={messages} loading={loading} onSendMessage={handleSendMessage} />
+          <div ref={messagesEndRef} />
+        </div>
+        <div className="w-1/4 p-4 h-full flex items-center justify-center">
+          {characterImage && <img src={characterImage} alt="Character" className="max-h-full" />}
         </div>
       </div>
     </div>
