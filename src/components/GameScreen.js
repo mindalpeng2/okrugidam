@@ -3,17 +3,17 @@ import Head from "next/head";
 import React, { useState, useEffect, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { db, saveGameData } from '@/firebase';
-import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, where, orderBy } from 'firebase/firestore';
 import Chat from './Chat'; // 기본 내보내기로 가져오기
 
 const GameScreen = () => {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [monsterImage, setMonsterImage] = useState(null);
   const [characterImage, setCharacterImage] = useState(null);
   const messagesEndRef = useRef(null);
-
+  const userId = session?.user?.id || null; // 세션에서 userId를 가져오며, 초기 값은 null
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -21,22 +21,29 @@ const GameScreen = () => {
   useEffect(() => {
     // Save game data when the component mounts
     saveGameData(); // 호출 위치 변경
-
-    const q = query(collection(db, 'messages'), orderBy('createdAt'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setMessages(messages);
-      scrollToBottom();
-    });
-
-    return () => unsubscribe();
-  }, []);
-
+    if (userId) {
+      // 현재 로그인한 유저의 userId와 일치하는 메시지만 불러오기
+      const q = query(
+        collection(db, 'messages'),
+        where('userId', '==', userId),
+        orderBy('createdAt')
+      );
+  
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setMessages(messages);
+        scrollToBottom();
+      });
+  
+      return () => unsubscribe();
+    }
+  }, [userId]);
+  
   useEffect(() => {
     if (messages.length > 0) {
+      console.log('Messages updated:', messages);
       const lastMessage = messages[messages.length - 1];
       if (lastMessage.sender === 'ai') {
-        // 몬스터 일러스트 경로 설정
         if (lastMessage.text.includes('구미호')) {
           setMonsterImage('/monsters/gumiho.png');
         } else if (lastMessage.text.includes('장산범')) {
@@ -54,13 +61,11 @@ const GameScreen = () => {
         } else if (lastMessage.text.includes('인면조')) {
           setMonsterImage('/monsters/ykdragon.png');
         }
-        
+
         if (lastMessage.text.includes('물리쳤습니다')) {
           setMonsterImage(null);
         }
-        // 추가적인 몬스터 조건 처리
       } else if (lastMessage.sender !== 'ai') {
-        // 캐릭터 일러스트 경로 설정
         if (lastMessage.text.includes('청룡')) {
           setCharacterImage('/characters/cheongryong.png');
         } else if (lastMessage.text.includes('백호')) {
@@ -70,25 +75,46 @@ const GameScreen = () => {
         } else if (lastMessage.text.includes('현무')) {
           setCharacterImage('/characters/hyunmu.png');
         }
-        // 추가적인 캐릭터 조건 처리
       }
     }
   }, [messages]);
 
   const handleSendMessage = async (messageContent) => {
     if (!messageContent || !messageContent.parts[0].text.trim()) return;
-  
+
     setLoading(true);
     const newMessage = {
       text: messageContent.parts[0].text,
       sender: session?.user?.name || 'unknown',
       senderName: session?.user?.name || 'unknown',
+      userId: session?.user?.email || session?.user?.id || 'unknown',
       createdAt: new Date(),
     };
-  
+
+    setMessages(prevMessages => [...prevMessages, newMessage]);
     await addDoc(collection(db, 'messages'), newMessage);
-  
-    // 새로운 메시지가 추가된 후에 API에 요청을 보냅니다.
+
+    const fetchWithRetry = async (url, options, retries = 3) => {
+      try {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+          if (response.status === 429 && retries > 0) {
+            const retryAfter = response.headers.get('Retry-After') || 1;
+            await new Promise(res => setTimeout(res, retryAfter * 1000));
+            return fetchWithRetry(url, options, retries - 1);
+          }
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      } catch (error) {
+        if (retries > 0) {
+          await new Promise(res => setTimeout(res, 1000));
+          return fetchWithRetry(url, options, retries - 1);
+        }
+        throw error;
+      }
+    };
+
     setTimeout(async () => {
       try {
         const formattedMessages = [
@@ -101,53 +127,51 @@ const GameScreen = () => {
             parts: [{ text: newMessage.text }]
           }
         ];
-  
-        const response = await fetch('/api/chat', {
+
+        console.log('Formatted messages for AI:', formattedMessages);
+
+        const response = await fetchWithRetry('/api/chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ messages: formattedMessages })
         });
-  
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+
+        if (response.error) {
+          if (response.error === 'Too Many Requests') {
+            alert(response.message);
+          } else {
+            alert('서버 오류가 발생했습니다. 잠시 후에 다시 시도해 주세요.');
+          }
+          setLoading(false);
+          return;
         }
-  
-        const data = await response.json();
-  
+
         const aiMessage = {
-          text: data.parts[0].text,
+          text: response.parts[0].text,
           sender: 'ai',
           senderName: 'AI',
+          userId: session?.user?.email || session?.user?.id || 'unknown',
           createdAt: new Date(),
         };
-  
+
         await addDoc(collection(db, 'messages'), aiMessage);
-  
-        // 중복 추가 방지를 위해 이 부분을 수정
-        setMessages(prevMessages => {
-          const newMessages = [...prevMessages, aiMessage];
-          const seen = new Set();
-          return newMessages.filter(msg => {
-            const duplicate = seen.has(msg.text);
-            seen.add(msg.text);
-            return !duplicate;
-          });
-        });
-  
+        setMessages(prevMessages => [...prevMessages, aiMessage]);
+
       } catch (error) {
         console.error('Error sending message to /api/chat:', error);
+        alert('서버 오류가 발생했습니다. 잠시 후에 다시 시도해 주세요.');
       } finally {
         setLoading(false);
       }
     }, 1000);
   };
 
+
   const handleLogout = () => {
     signOut();
   };
-
 
   return (
     <div className="h-screen w-screen flex flex-col" style={{ backgroundImage: 'url(/assets/BattleBG.png)', backgroundSize: 'cover' }}>
