@@ -174,8 +174,8 @@ const GameScreen = () => {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col" style={{ backgroundImage: 'url(/assets/BattleBG.png)', backgroundSize: 'cover' }}>
-      <header className="flex justify-between items-center p-4 w-full" style={{ backgroundColor: 'rgba(0, 0, 0, 0)' }}>
+    <div className="h-screen w-screen flex flex-col overflow-hidden" style={{ backgroundImage: 'url(/assets/BattleBG.png)', backgroundSize: 'cover' }}>
+      <header className="flex justify-between items-center p-4 w-full flex-shrink-0" style={{ backgroundColor: 'rgba(0, 0, 0, 0)', zIndex: 2 }}>
         <div style={{ 
           color: 'white', 
           textShadow: '1px 1px 0 #0f0f41, -1px -1px 0 #0f0f41, -1px 1px 0 #0f0f41, 1px -1px 0 #0f0f41',
@@ -200,21 +200,21 @@ const GameScreen = () => {
           onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
         ></button>
       </header>
-      <div className="flex flex-1 items-center justify-center w-full relative">
-        <img src="/assets/Jockjaaa.png" alt="족자 이미지" className="w-2/5 p-0 flex flex-col items-center" style={{ position: 'absolute', top: '-10px', transform: 'scale(1.2)' }} />
-        <div className="w-1/4 p-4 h-full flex items-center justify-center">
-          {monsterImage && <img src={monsterImage} alt="Monster" className="max-h-full" />}
+      <div className="flex flex-1 items-center justify-center w-full relative overflow-visible">
+        <img src="/assets/Jockjaaa.png" alt="족자 이미지" className="absolute w-2/5" style={{ top: '-10px', transform: 'scale(1.2)', zIndex: 9 }} />
+        <div className="w-1/4 p-4 h-full flex items-center justify-center" style={{ zIndex: 3 }}>
+          {monsterImage && <img src={monsterImage} alt="Monster" className="max-h-full mx-auto" />}
         </div>
-        <div className="w-2/5 p-0 flex flex-col items-center h-full">
+        <div className="w-2/5 p-0 flex flex-col items-center h-full overflow-hidden" style={{ zIndex: 3 }}>
           <Chat messages={messages} loading={loading} onSendMessage={handleSendMessage} />
           <div ref={messagesEndRef} />
         </div>
-        <div className="w-1/4 p-4 h-full flex items-center justify-center">
-          {characterImage && <img src={characterImage} alt="Character" className="max-h-full" />}
+        <div className="w-1/4 p-4 h-full flex items-center justify-center" style={{ zIndex: 3 }}>
+          {characterImage && <img src={characterImage} alt="Character" className="max-h-full mx-auto" />}
         </div>
       </div>
     </div>
-  );
+  );  
 };
 
 export default GameScreen;
