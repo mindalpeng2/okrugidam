@@ -13,16 +13,15 @@ const GameScreen = () => {
   const [monsterImage, setMonsterImage] = useState(null);
   const [characterImage, setCharacterImage] = useState(null);
   const messagesEndRef = useRef(null);
-  const userId = session?.user?.id || null; // 세션에서 userId를 가져오며, 초기 값은 null
+  const userId = session?.user?.id || null;
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
-    // Save game data when the component mounts
-    saveGameData(); // 호출 위치 변경
+    saveGameData();
     if (userId) {
-      // 현재 로그인한 유저의 userId와 일치하는 메시지만 불러오기
       const q = query(
         collection(db, 'messages'),
         where('userId', '==', userId),
@@ -38,10 +37,9 @@ const GameScreen = () => {
       return () => unsubscribe();
     }
   }, [userId]);
-  
+
   useEffect(() => {
     if (messages.length > 0) {
-      console.log('Messages updated:', messages);
       const lastMessage = messages[messages.length - 1];
       if (lastMessage.sender === 'ai') {
         if (lastMessage.text.includes('구미호')) {
@@ -92,82 +90,56 @@ const GameScreen = () => {
     };
 
     setMessages(prevMessages => [...prevMessages, newMessage]);
-    await addDoc(collection(db, 'messages'), newMessage);
 
-    const fetchWithRetry = async (url, options, retries = 3) => {
-      try {
-        const response = await fetch(url, options);
-        if (!response.ok) {
-          if (response.status === 429 && retries > 0) {
-            const retryAfter = response.headers.get('Retry-After') || 1;
-            await new Promise(res => setTimeout(res, retryAfter * 1000));
-            return fetchWithRetry(url, options, retries - 1);
-          }
-          throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+      await addDoc(collection(db, 'messages'), newMessage);
+
+      const formattedMessages = [
+        ...messages.map(msg => ({
+          role: msg.sender === 'ai' ? 'model' : 'user',
+          parts: [{ text: msg.text }]
+        })),
+        {
+          role: 'user',
+          parts: [{ text: newMessage.text }]
         }
-        return response.json();
-      } catch (error) {
-        if (retries > 0) {
-          await new Promise(res => setTimeout(res, 1000));
-          return fetchWithRetry(url, options, retries - 1);
-        }
-        throw error;
+      ];
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ messages: formattedMessages })
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
       }
-    };
 
-    setTimeout(async () => {
-      try {
-        const formattedMessages = [
-          ...messages.map(msg => ({
-            role: msg.sender === 'ai' ? 'model' : 'user',
-            parts: [{ text: msg.text }]
-          })),
-          {
-            role: 'user',
-            parts: [{ text: newMessage.text }]
-          }
-        ];
-
-        console.log('Formatted messages for AI:', formattedMessages);
-
-        const response = await fetchWithRetry('/api/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ messages: formattedMessages })
-        });
-
-        if (response.error) {
-          if (response.error === 'Too Many Requests') {
-            alert(response.message);
-          } else {
-            alert('서버 오류가 발생했습니다. 잠시 후에 다시 시도해 주세요.');
-          }
-          setLoading(false);
-          return;
-        }
-
-        const aiMessage = {
-          text: response.parts[0].text,
-          sender: 'ai',
-          senderName: 'AI',
-          userId: session?.user?.email || session?.user?.id || 'unknown',
-          createdAt: new Date(),
-        };
-
-        await addDoc(collection(db, 'messages'), aiMessage);
-        setMessages(prevMessages => [...prevMessages, aiMessage]);
-
-      } catch (error) {
-        console.error('Error sending message to /api/chat:', error);
-        alert('서버 오류가 발생했습니다. 잠시 후에 다시 시도해 주세요.');
-      } finally {
-        setLoading(false);
+      const responseData = await response.json();
+      if (responseData.error) {
+        throw new Error(responseData.message);
       }
-    }, 1000);
+
+      const aiMessage = {
+        text: responseData.parts[0].text,
+        sender: 'ai',
+        senderName: 'AI',
+        userId: session?.user?.email || session?.user?.id || 'unknown',
+        createdAt: new Date(),
+      };
+
+      await addDoc(collection(db, 'messages'), aiMessage);
+      setMessages(prevMessages => [...prevMessages, aiMessage]);
+
+    } catch (error) {
+      console.error('Error sending message to /api/chat:', error);
+      alert('서버 오류가 발생했습니다. 잠시 후에 다시 시도해 주세요.');
+    } finally {
+      setLoading(false);
+    }
   };
-
 
   const handleLogout = () => {
     signOut();
