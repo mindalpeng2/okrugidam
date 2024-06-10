@@ -60,9 +60,17 @@ const GameScreen = () => {
           setMonsterImage('/monsters/ykdragon.png');
         }
 
-        if (lastMessage.text.includes('물리쳤습니다')) {
+        if (lastMessage.text.includes('승리했습니다')) {
           setMonsterImage(null);
+          setCharacterImage(null);
         }
+
+        if (lastMessage.text.includes('전투 중이 아니랍니다!')) {
+          setMonsterImage(null);
+          setCharacterImage(null);
+        }
+        
+
       } else if (lastMessage.sender !== 'ai') {
         if (lastMessage.text.includes('청룡')) {
           setCharacterImage('/characters/cheongryong.png');
