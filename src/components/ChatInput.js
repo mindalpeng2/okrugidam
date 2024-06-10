@@ -5,6 +5,7 @@ export const ChatInput = ({ onSendMessage }) => {
   const [content, setContent] = useState('');
 
   const textareaRef = useRef(null);
+  const sendingMessageRef = useRef(false);
 
   const handleChange = (e) => {
     const value = e.target.value;
@@ -12,13 +13,19 @@ export const ChatInput = ({ onSendMessage }) => {
   };
 
   const handleSend = () => {
-    if (!content) {
-      alert("메시지를 입력하세요.");
+    console.log("handleSend called");
+    if (!content || sendingMessageRef.current) {
+      console.log("Message not sent: Empty content or message already being sent");
       return;
     }
 
+    sendingMessageRef.current = true;
     onSendMessage({ role: "user", parts: [{ text: content }] });
+    console.log("Message sent:", content);
     setContent("");
+    setTimeout(() => {
+      sendingMessageRef.current = false;
+    }, 1000); // Prevent double sending within 1 second
   };
 
   const handleKeyDown = (e) => {
@@ -48,10 +55,11 @@ export const ChatInput = ({ onSendMessage }) => {
         onKeyDown={handleKeyDown}
       />
 
-      <button onClick={() => handleSend()}>
+      <button onClick={handleSend}>
         <IconArrowUp className="absolute right-2 bottom-3 h-8 w-8 hover:cursor-pointer rounded-full p-1 bg-blue-500 text-white hover:opacity-80" />
       </button>
     </div>
   );
 };
 
+export default ChatInput;
