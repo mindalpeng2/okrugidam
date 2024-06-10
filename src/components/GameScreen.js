@@ -27,13 +27,13 @@ const GameScreen = () => {
         where('userId', '==', userId),
         orderBy('createdAt')
       );
-  
+
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setMessages(messages);
         scrollToBottom();
       });
-  
+
       return () => unsubscribe();
     }
   }, [userId]);
@@ -78,9 +78,9 @@ const GameScreen = () => {
   }, [messages]);
 
   const handleSendMessage = async (messageContent) => {
+    console.log("handleSendMessage called with content:", messageContent);
     if (!messageContent || !messageContent.parts[0].text.trim()) return;
-
-    setLoading(true);
+  
     const newMessage = {
       text: messageContent.parts[0].text,
       sender: session?.user?.name || 'unknown',
@@ -88,16 +88,23 @@ const GameScreen = () => {
       userId: session?.user?.email || session?.user?.id || 'unknown',
       createdAt: new Date(),
     };
-
-    // Firebase에 먼저 메시지를 추가합니다.
+  
+    console.log("New message created:", newMessage);
+  
+    // 사용자 메시지를 먼저 화면에 반영합니다.
+    setMessages(prevMessages => {
+      const updatedMessages = [...prevMessages, newMessage];
+      console.log("Messages updated with user message:", updatedMessages);
+      return updatedMessages;
+    });
+  
+    // Firebase에 사용자 메시지를 추가합니다.
     await addDoc(collection(db, 'messages'), newMessage);
-
-    // 상태를 업데이트하여 사용자가 보낸 메시지를 UI에 반영합니다.
-    setMessages(prevMessages => [...prevMessages, newMessage]);
-
+  
+    setLoading(true);
+  
     try {
-      await addDoc(collection(db, 'messages'), newMessage);
-
+      // 현재 메시지 목록에 새로운 메시지를 추가합니다.
       const formattedMessages = [
         ...messages.map(msg => ({
           role: msg.sender === 'ai' ? 'model' : 'user',
@@ -108,7 +115,7 @@ const GameScreen = () => {
           parts: [{ text: newMessage.text }]
         }
       ];
-
+  
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -116,16 +123,16 @@ const GameScreen = () => {
         },
         body: JSON.stringify({ messages: formattedMessages })
       });
-
+  
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-
+  
       const responseData = await response.json();
       if (responseData.error) {
         throw new Error(responseData.message);
       }
-
+  
       const aiMessage = {
         text: responseData.parts[0].text,
         sender: 'ai',
@@ -133,21 +140,25 @@ const GameScreen = () => {
         userId: session?.user?.email || session?.user?.id || 'unknown',
         createdAt: new Date(),
       };
-
+  
+      console.log("AI response received:", aiMessage);
+  
       // Firebase에 AI 메시지를 추가합니다.
       await addDoc(collection(db, 'messages'), aiMessage);
-
+  
       // 상태를 업데이트하여 AI 메시지를 UI에 반영합니다.
       setMessages(prevMessages => {
         const newMessages = [...prevMessages, aiMessage];
         const seen = new Set();
-        return newMessages.filter(msg => {
+        const filteredMessages = newMessages.filter(msg => {
           const duplicate = seen.has(msg.text);
           seen.add(msg.text);
           return !duplicate;
         });
+        console.log("Filtered messages:", filteredMessages);
+        return filteredMessages;
       });
-
+  
     } catch (error) {
       console.error('Error sending message to /api/chat:', error);
       alert('서버 오류가 발생했습니다. 잠시 후에 다시 시도해 주세요.');
@@ -155,7 +166,9 @@ const GameScreen = () => {
       setLoading(false);
     }
   };
-
+  
+  
+  
   const handleLogout = () => {
     signOut();
   };
