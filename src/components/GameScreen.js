@@ -3,8 +3,8 @@ import Head from "next/head";
 import React, { useState, useEffect, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { db, saveGameData } from '@/firebase';
-import { collection, addDoc, onSnapshot, query, where, orderBy } from 'firebase/firestore';
-import Chat from './Chat'; // 기본 내보내기로 가져오기
+import { collection, addDoc, onSnapshot, query, where, orderBy, deleteDoc, doc, getDocs, writeBatch } from 'firebase/firestore';
+import Chat from './Chat';
 
 const GameScreen = () => {
   const { data: session, status } = useSession();
@@ -80,7 +80,7 @@ const GameScreen = () => {
   const handleSendMessage = async (messageContent) => {
     console.log("handleSendMessage called with content:", messageContent);
     if (!messageContent || !messageContent.parts[0].text.trim()) return;
-  
+
     const newMessage = {
       text: messageContent.parts[0].text,
       sender: session?.user?.name || 'unknown',
@@ -88,21 +88,21 @@ const GameScreen = () => {
       userId: session?.user?.email || session?.user?.id || 'unknown',
       createdAt: new Date(),
     };
-  
+
     console.log("New message created:", newMessage);
-  
+
     // 사용자 메시지를 먼저 화면에 반영합니다.
     setMessages(prevMessages => {
       const updatedMessages = [...prevMessages, newMessage];
       console.log("Messages updated with user message:", updatedMessages);
       return updatedMessages;
     });
-  
+
     // Firebase에 사용자 메시지를 추가합니다.
     await addDoc(collection(db, 'messages'), newMessage);
-  
+
     setLoading(true);
-  
+
     try {
       // 현재 메시지 목록에 새로운 메시지를 추가합니다.
       const formattedMessages = [
@@ -115,7 +115,7 @@ const GameScreen = () => {
           parts: [{ text: newMessage.text }]
         }
       ];
-  
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -123,16 +123,16 @@ const GameScreen = () => {
         },
         body: JSON.stringify({ messages: formattedMessages })
       });
-  
+
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-  
+
       const responseData = await response.json();
       if (responseData.error) {
         throw new Error(responseData.message);
       }
-  
+
       const aiMessage = {
         text: responseData.parts[0].text,
         sender: 'ai',
@@ -140,12 +140,12 @@ const GameScreen = () => {
         userId: session?.user?.email || session?.user?.id || 'unknown',
         createdAt: new Date(),
       };
-  
+
       console.log("AI response received:", aiMessage);
-  
+
       // Firebase에 AI 메시지를 추가합니다.
       await addDoc(collection(db, 'messages'), aiMessage);
-  
+
       // 상태를 업데이트하여 AI 메시지를 UI에 반영합니다.
       setMessages(prevMessages => {
         const newMessages = [...prevMessages, aiMessage];
@@ -158,7 +158,7 @@ const GameScreen = () => {
         console.log("Filtered messages:", filteredMessages);
         return filteredMessages;
       });
-  
+
     } catch (error) {
       console.error('Error sending message to /api/chat:', error);
       alert('서버 오류가 발생했습니다. 잠시 후에 다시 시도해 주세요.');
@@ -166,11 +166,37 @@ const GameScreen = () => {
       setLoading(false);
     }
   };
-  
-  
-  
-  const handleLogout = () => {
-    signOut();
+
+  const resetGame = async () => {
+    const confirmReset = confirm('모든 대화 내용이 사라지고 새로운 게임이 시작됩니다. 초기화하시겠습니까?');
+    if (confirmReset) {
+      if (userId) {
+        // Firebase에서 유저의 모든 메시지를 삭제합니다.
+        const q = query(
+          collection(db, 'messages'),
+          where('userId', '==', userId)
+        );
+
+        const snapshot = await getDocs(q);
+        const batch = writeBatch(db);
+
+        snapshot.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+
+        await batch.commit();
+
+        // 게임 데이터를 초기화합니다.
+        saveGameData();
+
+        // 메시지 상태를 초기화합니다.
+        setMessages([]);
+
+        // 몬스터 및 캐릭터 이미지를 초기화합니다.
+        setMonsterImage(null);
+        setCharacterImage(null);
+      }
+    }
   };
 
   return (
@@ -184,7 +210,7 @@ const GameScreen = () => {
           {session?.user?.name} 공 어서 오시게나!
         </div>
         <button 
-          onClick={handleLogout}
+          onClick={() => signOut()}
           style={{
             pointerEvents: 'all',
             backgroundImage: "url('/assets/LogoutBTT.png')",
@@ -212,6 +238,26 @@ const GameScreen = () => {
         <div className="w-1/4 p-4 h-full flex items-center justify-center" style={{ zIndex: 3 }}>
           {characterImage && <img src={characterImage} alt="Character" className="max-h-full mx-auto" />}
         </div>
+        <button 
+          onClick={resetGame}
+          style={{
+            position: 'absolute',
+            right: '20px',
+            bottom: '20px',
+            padding: '5px 10px',
+            border: '1px solid white', // 흰색 테두리로 설정
+            color: 'white',
+            backgroundColor: 'transparent', // 배경색 제거
+            borderRadius: '5px',
+            cursor: 'pointer',
+            zIndex: 10, // ensure the button is on top
+            display: 'flex', // ensure padding and size are correctly applied
+            justifyContent: 'center', // center the text
+            alignItems: 'center', // center the text vertically
+          }}
+        >
+          초기화
+        </button>
       </div>
     </div>
   );  
