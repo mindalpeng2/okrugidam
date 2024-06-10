@@ -13,10 +13,10 @@ export const ChatBubble = ({ message }) => {
   return (
     <div className={`flex flex-col ${sender === 'ai' ? 'items-start' : 'items-end'}`}>
       <div
-        className="flex items-center rounded-2xl px-3 py-2 whitespace-pre-wrap"
+        className="flex items-center rounded-2xl px-3 py-2 max-w-[67%] whitespace-pre-wrap"
         style={{ overflowWrap: 'anywhere', ...messageStyle }}
       >
-        <strong>{senderName || sender}</strong>: {text}
+        {sender !== 'ai' && <strong>{senderName || sender}</strong>}: {text}
       </div>
     </div>
   );
