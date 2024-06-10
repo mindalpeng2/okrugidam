@@ -69,7 +69,10 @@ const GameScreen = () => {
           setMonsterImage(null);
           setCharacterImage(null);
         }
-        
+
+        if (lastMessage.text.includes('다음 기회를 노려주세요')) {
+          setCharacterImage(null);
+        }
 
       } else if (lastMessage.sender !== 'ai') {
         if (lastMessage.text.includes('청룡')) {
