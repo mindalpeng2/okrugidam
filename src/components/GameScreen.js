@@ -5,6 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { db, saveGameData } from '@/firebase';
 import { collection, addDoc, onSnapshot, query, where, orderBy, deleteDoc, doc, getDocs, writeBatch } from 'firebase/firestore';
 import Chat from './Chat';
+//import levenshtein from 'levenshtein'; < 시도하는데 뭔가 잘 안 됨
 
 const GameScreen = () => {
   const { data: session, status } = useSession();
@@ -60,17 +61,17 @@ const GameScreen = () => {
           setMonsterImage('/monsters/ykdragon.png');
         }
 
-        if (lastMessage.text.includes('승리했습니다')) {
+        if (lastMessage.text.includes('물리쳤습니다')|| lastMessage.text.includes('승리')|| lastMessage.text.includes('축하합니다')) {
           setMonsterImage(null);
           setCharacterImage(null);
         }
 
-        if (lastMessage.text.includes('전투 중이 아니랍니다!')) {
+        if (lastMessage.text.includes('몬스터 중 하나')) {
           setMonsterImage(null);
           setCharacterImage(null);
         }
 
-        if (lastMessage.text.includes('다음 기회를 노려주세요')) {
+        if (lastMessage.text.includes('이미 이번 턴')) {
           setCharacterImage(null);
         }
 
