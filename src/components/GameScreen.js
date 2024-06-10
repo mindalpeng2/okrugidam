@@ -89,6 +89,10 @@ const GameScreen = () => {
       createdAt: new Date(),
     };
 
+    // Firebase에 먼저 메시지를 추가합니다.
+    await addDoc(collection(db, 'messages'), newMessage);
+
+    // 상태를 업데이트하여 사용자가 보낸 메시지를 UI에 반영합니다.
     setMessages(prevMessages => [...prevMessages, newMessage]);
 
     try {
@@ -130,8 +134,19 @@ const GameScreen = () => {
         createdAt: new Date(),
       };
 
+      // Firebase에 AI 메시지를 추가합니다.
       await addDoc(collection(db, 'messages'), aiMessage);
-      setMessages(prevMessages => [...prevMessages, aiMessage]);
+
+      // 상태를 업데이트하여 AI 메시지를 UI에 반영합니다.
+      setMessages(prevMessages => {
+        const newMessages = [...prevMessages, aiMessage];
+        const seen = new Set();
+        return newMessages.filter(msg => {
+          const duplicate = seen.has(msg.text);
+          seen.add(msg.text);
+          return !duplicate;
+        });
+      });
 
     } catch (error) {
       console.error('Error sending message to /api/chat:', error);
